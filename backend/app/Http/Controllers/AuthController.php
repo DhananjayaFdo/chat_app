@@ -23,6 +23,7 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         $data = $request->validated();
+
         $data['password'] = Hash::make($data['password']);
         $data['username'] = strstr($data['email'], '@', true);
 
@@ -31,8 +32,8 @@ class AuthController extends Controller
         $token = $user->createToken(User::USER_TOKEN);
 
         return $this->success([
-            'user' => $user,
             'token' => $token->plainTextToken,
+            'user' => $user,
         ], 'Register successfully');
     }
 
@@ -47,7 +48,7 @@ class AuthController extends Controller
     {
         $isValidate = $this->isValidCredentials($request);
 
-        if (!$isValidate) {
+        if (!$isValidate['success']) {
             return $this->error($isValidate['message'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -55,8 +56,8 @@ class AuthController extends Controller
         $token = $user->createToken(User::USER_TOKEN);
 
         return $this->success([
-            'user' => $user,
             'token' => $token->plainTextToken,
+            'user' => $user,
         ], 'Login successfully');
     }
 
@@ -72,7 +73,7 @@ class AuthController extends Controller
         $data = $request->validated();
         $user = User::where('email', $data['email'])->first();
 
-        if ($user == null) {
+        if ($user === null) {
             return [
                 'success' => false,
                 'message' => 'User not found',
@@ -82,7 +83,7 @@ class AuthController extends Controller
         if (Hash::check($data['password'], $user->password)) {
             return [
                 'success' => true,
-                'message' => 'Login successfully',
+                'user' => $user,
             ];
         }
 
